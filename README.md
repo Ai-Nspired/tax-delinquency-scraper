@@ -6,7 +6,7 @@ Scrapes property tax delinquency records from San Bernardino County for pre-fore
 
 ## Live Demo
 
-- **Frontend (GitHub Pages)**: [https://dno-luigi.github.io/tax-delinquency-scraper](https://dno-luigi.github.io/tax-delinquency-scraper) *(enable Pages below)*
+- **Frontend (GitHub Pages)**: [https://dno-luigi.github.io/tax-delinquency-scraper](https://dno-luigi.github.io/tax-delinquency-scraper)
 - **API (Cloudflare Pages)**: [https://tax-delinquency-scraper.pages.dev](https://tax-delinquency-scraper.pages.dev)
 
 ## Quick Start
@@ -28,28 +28,30 @@ npm run process     # Process raw data and filter 4+ year delinquency
 npm run export      # Export processed results
 npm run dev         # Run with auto-reload (Node --watch)
 npm test            # Run test suite
-npm run preview     # Preview frontend locally (npx serve public)
+npm run preview     # Preview frontend locally (npx serve docs)
 npm run deploy      # Deploy Worker to Cloudflare Pages
 node src/index.js --search <parcelId>   # Search a specific parcel
 ```
 
 ## GitHub Pages (Frontend)
 
-The frontend is a static SPA in the `public/` folder. To enable GitHub Pages:
+The frontend is a static SPA in the `docs/` folder. GitHub Pages serves this folder automatically.
+
+### Enable GitHub Pages
 
 1. Go to **Settings > Pages** on the GitHub repo
 2. Under **Build and deployment**, set **Source** to **GitHub Actions**
-3. The `.github/workflows/deploy.yml` workflow will automatically deploy the `public/` folder on every push to `main`
+3. The `.github/workflows/deploy.yml` workflow will automatically deploy the `docs/` folder on every push to `main`
 4. Once deployed, the frontend is live at `https://<your-username>.github.io/tax-delinquency-scraper`
 
 ### What gets deployed
 
 | File | Purpose |
 |---|---|
-| `public/index.html` | Main SPA with search bar, stats, and property list |
-| `public/styles.css` | Dark theme, responsive styles |
-| `public/app.js` | Frontend logic — fetches from `/api/*` endpoints |
-| `public/.nojekyll` | Prevents Jekyll processing of assets |
+| `docs/index.html` | Main SPA with search bar, stats, and property list |
+| `docs/styles.css` | Dark theme, responsive styles |
+| `docs/app.js` | Frontend logic — fetches from `/api/*` endpoints |
+| `docs/.nojekyll` | Prevents Jekyll processing of assets |
 
 ## Cloudflare (API Backend)
 
