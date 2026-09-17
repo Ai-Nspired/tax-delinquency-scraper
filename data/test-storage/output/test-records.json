@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1234-AB-5678-2022",
+    "parcelId": "1234-AB-5678",
+    "ownerName": "John Smith",
+    "address": "123 Main St",
+    "delinquencyAmount": 5432.1,
+    "delinquencyYears": 5,
+    "taxYear": "2022",
+    "status": "delinquent",
+    "source": "county-tax-office",
+    "scrapedAt": "2026-09-16T00:00:00.000Z"
+  },
+  {
+    "id": "5555-EF-3333-2019",
+    "parcelId": "5555-EF-3333",
+    "ownerName": "Acme Corp",
+    "address": "789 Business Rd",
+    "delinquencyAmount": 12800.5,
+    "delinquencyYears": 7,
+    "taxYear": "2019",
+    "status": "delinquent",
+    "source": "county-tax-office",
+    "scrapedAt": "2026-09-16T00:00:00.000Z"
+  }
+]

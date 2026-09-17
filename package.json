@@ -1,0 +1,24 @@
+{
+  "name": "tax-delinquency-scraper",
+  "version": "0.1.0",
+  "description": "Scrapes San Bernardino County property tax delinquency records for pre-foreclosure and pre-tax-sale research",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/",
+    "scrape": "node src/index.js --scrape",
+    "process": "node src/index.js --process",
+    "export": "node src/index.js --export"
+  },
+  "keywords": [
+    "tax",
+    "delinquency",
+    "scraper",
+    "properties",
+    "pre-foreclosure",
+    "san-bernardino"
+  ],
+  "license": "MIT"
+}
