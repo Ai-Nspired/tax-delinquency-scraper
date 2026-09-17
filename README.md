@@ -35,23 +35,23 @@ node src/index.js --search <parcelId>   # Search a specific parcel
 
 ## GitHub Pages (Frontend)
 
-The frontend is a static SPA on the `gh-pages` branch. GitHub Pages serves it automatically.
+The frontend is a static SPA in the `docs/` folder on the `main` branch.
 
 ### Enable GitHub Pages
 
 1. Go to **Settings > Pages** on the GitHub repo
 2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
-3. Set **Branch** to **gh-pages** and **Folder** to **/ (root)**
+3. Set **Branch** to **main** and **Folder** to **/docs**
 4. Save — the frontend will be live at `https://Ai-Nspired.github.io/tax-delinquency-scraper`
 
 ### What gets deployed
 
 | File | Purpose |
 |---|---|
-| `index.html` | Main SPA with search bar, stats, and property list |
-| `styles.css` | Dark theme, responsive styles |
-| `app.js` | Frontend logic — fetches from `/api/*` endpoints |
-| `.nojekyll` | Prevents Jekyll processing of assets |
+| `docs/index.html` | Main SPA with search bar, stats, and property list |
+| `docs/styles.css` | Dark theme, responsive styles |
+| `docs/app.js` | Frontend logic — fetches from `/api/*` endpoints |
+| `docs/.nojekyll` | Prevents Jekyll processing of assets |
 
 ## Cloudflare (API Backend)
 
