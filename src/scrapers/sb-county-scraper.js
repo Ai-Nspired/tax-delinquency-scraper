@@ -1,7 +1,7 @@
 /**
  * San Bernardino County Tax Scraper
- * Uses browser automation to search the county tax portal
- * for pre-foreclosure and pre-tax-sale property data.
+ * Scrapes ALL properties with 1-5 years delinquency from the county tax portal.
+ * Supports scheduled regular scraping.
  */
 import { BaseScraper } from "./base-scraper.js";
 import { logger } from "../utils/logger.js";
@@ -11,11 +11,63 @@ export class SBCountyTaxScraper extends BaseScraper {
   constructor(config) {
     super(config);
     this.selectors = config.selectors || {};
+    this.minDelinquencyYears = config.minDelinquencyYears || 1;
+    this.maxDelinquencyYears = config.maxDelinquencyYears || 5;
   }
 
   /**
-   * Search for a property by parcel ID on the San Bernardino County tax portal.
-   * Uses the GSG (Grant Street Group) platform embedded in the county site.
+   * List ALL properties with 1-5 years delinquency.
+   * This is the primary research method for pre-foreclosure/pre-tax-sale analysis.
+   * @param {object} [options]
+   * @returns {Promise<Array>}
+   */
+  async listAllDelinquent(options = {}) {
+    const minYears = options.minDelinquencyYears || this.minDelinquencyYears;
+    const maxYears = options.maxDelinquencyYears || this.maxDelinquencyYears;
+    const batchSize = options.batchSize || 100;
+    const maxResults = options.maxResults || 5000;
+
+    logger.info(`Listing all properties with ${minYears}-${maxYears} years delinquency`);
+
+    const allRecords = [];
+    let offset = 0;
+
+    while (allRecords.length < maxResults) {
+      try {
+        const url = this.buildUrl(this.config.searchPath) + "?delinquent=true&minYears=" + minYears + "&maxYears=" + maxYears + "&offset=" + offset + "&limit=" + batchSize;
+        logger.info(`Fetching batch: offset=${offset}, limit=${batchSize}`);
+
+        const html = await this.fetch(url);
+        const records = this.extractRecords(html);
+
+        if (records.length === 0) {
+          logger.info("No more records found, stopping pagination");
+          break;
+        }
+
+        allRecords.push(...records);
+        offset += batchSize;
+
+        // Respect rate limits
+        await this._sleep(this.delay || 1000);
+      } catch (err) {
+        logger.error(`Error fetching batch at offset ${offset}: ${err.message}`);
+        break;
+      }
+    }
+
+    // Filter to the target delinquency range
+    const filtered = allRecords.filter(r => r.delinquencyYears >= minYears && r.delinquencyYears <= maxYears);
+
+    // Sort by delinquency years descending (most delinquent first)
+    filtered.sort((a, b) => b.delinquencyYears - a.delinquencyYears);
+
+    logger.info(`Found ${filtered.length} properties with ${minYears}-${maxYears} years delinquency`);
+    return filtered;
+  }
+
+  /**
+   * Search for a specific parcel by ID.
    * @param {string} parcelId
    * @param {object} [options]
    * @returns {Promise<Array>}
@@ -27,50 +79,62 @@ export class SBCountyTaxScraper extends BaseScraper {
     }
 
     logger.info(`Searching San Bernardino County for parcel ${validation.normalized}`);
-
-    // The county tax portal uses GSG (Grant Street Group) platform
-    // The search URL format for GSG:
     const searchUrl = this.buildUrl(this.config.searchPath) + "?parcel=" + encodeURIComponent(validation.normalized);
-    logger.info(`Searching at ${searchUrl}`);
 
     try {
       const html = await this.fetch(searchUrl);
       const records = this.extractRecords(html);
-
-      // Filter to 4+ years delinquency by default
-      const minYears = options.minDelinquencyYears || 4;
+      const minYears = options.minDelinquencyYears || this.minDelinquencyYears;
       const filtered = records.filter(r => r.delinquencyYears >= minYears);
-
       logger.info(`Found ${filtered.length} records for parcel ${validation.normalized}`);
       return filtered;
     } catch (err) {
       logger.error(`Error searching parcel ${validation.normalized}: ${err.message}`);
-      // Return empty array on error - the GSG platform may be down
+      return [];
+    }
+  }
+
+  /**
+   * Search by owner name (partial match).
+   * @param {string} ownerName
+   * @param {object} [options]
+   * @returns {Promise<Array>}
+   */
+  async searchByOwner(ownerName, options = {}) {
+    logger.info(`Searching San Bernardino County for owner "${ownerName}"`);
+    const searchUrl = this.buildUrl(this.config.searchPath) + "?owner=" + encodeURIComponent(ownerName.trim());
+
+    try {
+      const html = await this.fetch(searchUrl);
+      const records = this.extractRecords(html);
+      const minYears = options.minDelinquencyYears || this.minDelinquencyYears;
+      const filtered = records.filter(r => r.delinquencyYears >= minYears);
+      logger.info(`Found ${filtered.length} records for owner "${ownerName}"`);
+      return filtered;
+    } catch (err) {
+      logger.error(`Error searching owner "${ownerName}": ${err.message}`);
       return [];
     }
   }
 
   /**
    * Extract records from HTML response.
-   * The GSG platform returns search results in a structured HTML format.
    * @param {string} html
    * @returns {Array}
    */
   extractRecords(html) {
     const records = [];
-
-    // Try to find property rows in the HTML
-    // GSG typically renders results in a table or list format
     const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
     let match;
+
     while ((match = trRegex.exec(html)) !== null) {
       const rowHtml = match[1];
-      const cells = rowHtml.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
-      const cellTexts = cells.map(td => td.replace(/<[^>]*>/g, "").trim()).filter(t => t.length > 0);
+      const tdMatches = rowHtml.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
+      const cellTexts = tdMatches.map(td => td.replace(/<[^>]*>/g, "").trim()).filter(t => t.length > 0);
 
       if (cellTexts.length >= 4) {
         const record = {
-          id: cellTexts[0] + "-" + (cellTexts[cellTexts.length - 1] || "unknown"),
+          id: "",
           parcelId: cellTexts[0] || "",
           ownerName: cellTexts[1] || "",
           address: cellTexts[2] || "",
@@ -82,7 +146,8 @@ export class SBCountyTaxScraper extends BaseScraper {
           scrapedAt: new Date().toISOString(),
         };
         record.id = record.parcelId + "-" + (record.taxYear || "unknown");
-        records.push(record);
+        const vr = validateRecord(record);
+        if (vr.valid) records.push(record);
       }
     }
 
@@ -101,6 +166,10 @@ export class SBCountyTaxScraper extends BaseScraper {
     const val = parseInt(text.replace(/[^0-9\-]/g, ""), 10);
     return isNaN(val) ? 0 : val;
   }
+
+  _sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 }
 
 export const sbCountyScraper = new SBCountyTaxScraper({
@@ -109,6 +178,8 @@ export const sbCountyScraper = new SBCountyTaxScraper({
   baseUrl: "https://www.sbcountyatc.gov",
   searchPath: "/tax-services/property-tax",
   delinquencyYears: 4,
+  minDelinquencyYears: 1,
+  maxDelinquencyYears: 5,
   selectors: {
     searchForm: "#parcel-search-form",
     accountNumber: "#account-number",

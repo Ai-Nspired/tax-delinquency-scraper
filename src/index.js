@@ -2,12 +2,16 @@
  * Tax Delinquency Scraper - Main Entry Point
  *
  * San Bernardino County pre-foreclosure and pre-tax-sale research pipeline.
+ * Scrapes ALL properties with 1-5 years delinquency regularly.
  *
  * Usage:
- *   node src/index.js --search <parcel>   Search a specific parcel
- *   node src/index.js --scrape            Run scrapers
+ *   node src/index.js --list             List all 1-5yr delinquent properties
+ *   node src/index.js --search <parcel>  Search a specific parcel
+ *   node src/index.js --owner <name>     Search by owner name
+ *   node src/index.js --scrape           Run scraper (alias for --list)
  *   node src/index.js --process          Process raw data
  *   node src/index.js --export           Export results
+ *   node src/index.js --watch            Run scraper on a schedule (every 6h)
  *   node src/index.js                    Show status
  */
 import { SITES, DEFAULT_PARAMS } from "./config/sites.js";
@@ -40,11 +44,23 @@ async function main() {
   });
   const scraper = new SBCountyTaxScraper(SITES[0]);
 
+  // --list: List all 1-5yr delinquent properties
+  if (flags.has("list") || flags.has("scrape")) {
+    logger.info("Starting full scrape of San Bernardino County delinquent properties");
+    const minYears = parseInt(params.minYears || "1", 10);
+    const maxYears = parseInt(params.maxYears || "5", 10);
+    const records = await scraper.listAllDelinquent({ minDelinquencyYears: minYears, maxDelinquencyYears: maxYears });
+    const result = processor.process(records);
+    storage.saveRecords(result.valid, "records.json");
+    console.log(JSON.stringify(result.stats, null, 2));
+    return;
+  }
+
   // --search <parcelId>
   if (flags.has("search")) {
     const parcelId = params.search || params.parcel;
     if (!parcelId) {
-      console.error("Error: --search requires a parcel ID. Usage: --search <parcelId>");
+      console.error("Error: --search requires a parcel ID");
       process.exit(1);
     }
     const validation = validateParcelId(parcelId);
@@ -58,19 +74,41 @@ async function main() {
     return;
   }
 
-  // --scrape
-  if (flags.has("scrape")) {
-    logger.info("Starting scrape of San Bernardino County tax portal");
-    const allRecords = [];
-    try {
-      const records = await scraper.searchParcel(params.parcel || "", { minDelinquencyYears: ENV.MIN_DELINQUENCY_YEARS });
-      allRecords.push(...records);
-    } catch (err) {
-      logger.error(`Scrape error: ${err.message}`);
+  // --owner <name>
+  if (flags.has("owner")) {
+    const ownerName = params.owner;
+    if (!ownerName) {
+      console.error("Error: --owner requires a name");
+      process.exit(1);
     }
-    const result = processor.process(allRecords);
-    storage.saveRecords(result.valid, "records.json");
-    console.log(JSON.stringify(result.stats, null, 2));
+    const records = await scraper.searchByOwner(ownerName, { minDelinquencyYears: ENV.MIN_DELINQUENCY_YEARS });
+    const result = processor.process(records);
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  // --watch: Run scraper on a schedule
+  if (flags.has("watch")) {
+    const intervalMs = parseInt(params.interval || "21600000", 10); // Default: 6 hours
+    logger.info(`Starting scheduled scrape every ${intervalMs / 3600000}h`);
+
+    const run = async () => {
+      try {
+        const records = await scraper.listAllDelinquent({ minDelinquencyYears: 1, maxDelinquencyYears: 5 });
+        const result = processor.process(records);
+        storage.appendRecords(result.valid, "records.json");
+        logger.info(`Scheduled scrape complete: ${result.valid.length} records`);
+      } catch (err) {
+        logger.error(`Scheduled scrape failed: ${err.message}`);
+      }
+    };
+
+    await run(); // Run immediately first
+    const intervalId = setInterval(run, intervalMs);
+
+    // Graceful shutdown
+    process.on("SIGINT", () => { clearInterval(intervalId); process.exit(0); });
+    process.on("SIGTERM", () => { clearInterval(intervalId); process.exit(0); });
     return;
   }
 
@@ -89,7 +127,7 @@ async function main() {
     console.log("Tax Delinquency Scraper");
     console.log("========================");
     console.log(JSON.stringify(stats, null, 2));
-    console.log("\nCommands: --search <parcelId>, --scrape, --process, --export");
+    console.log("\nCommands: --list, --search <parcelId>, --owner <name>, --process, --watch, --export");
   }
 }
 
