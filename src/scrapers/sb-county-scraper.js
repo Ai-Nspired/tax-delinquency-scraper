@@ -1,7 +1,7 @@
 /**
  * San Bernardino County Tax Scraper
- * Scrapes ALL properties with 1-5 years delinquency from the county tax portal.
- * Supports scheduled regular scraping.
+ * Pragmatic browser-based scraper for pre-foreclosure/pre-tax-sale research.
+ * Interacts with the county tax portal to extract property delinquency data.
  */
 import { BaseScraper } from "./base-scraper.js";
 import { logger } from "../utils/logger.js";
@@ -10,14 +10,16 @@ import { validateParcelId, validateRecord } from "../utils/validators.js";
 export class SBCountyTaxScraper extends BaseScraper {
   constructor(config) {
     super(config);
-    this.selectors = config.selectors || {};
     this.minDelinquencyYears = config.minDelinquencyYears || 1;
     this.maxDelinquencyYears = config.maxDelinquencyYears || 5;
+    this.baseUrl = config.baseUrl || "https://www.sbcountyatc.gov";
+    this.searchPath = config.searchPath || "/tax-services/property-tax";
   }
 
   /**
    * List ALL properties with 1-5 years delinquency.
    * This is the primary research method for pre-foreclosure/pre-tax-sale analysis.
+   * Uses the county tax portal to search and extract property records.
    * @param {object} [options]
    * @returns {Promise<Array>}
    */
@@ -28,13 +30,21 @@ export class SBCountyTaxScraper extends BaseScraper {
     const maxResults = options.maxResults || 5000;
 
     logger.info(`Listing all properties with ${minYears}-${maxYears} years delinquency`);
+    logger.info(`Target: San Bernardino County Tax Portal (GSG platform)`);
+
+    // The county tax portal uses GSG (Grant Street Group) platform
+    // The search is done through the embedded iframe at:
+    // https://gsgprod.sbcountyatc.gov/ca-sanbernardino/ca-sanbernardino/property-tax
+    //
+    // For bulk scraping, the GSG platform supports pagination via URL parameters.
+    // The search form accepts parcel ID, owner name, and address queries.
 
     const allRecords = [];
     let offset = 0;
 
     while (allRecords.length < maxResults) {
       try {
-        const url = this.buildUrl(this.config.searchPath) + "?delinquent=true&minYears=" + minYears + "&maxYears=" + maxYears + "&offset=" + offset + "&limit=" + batchSize;
+        const url = this.buildUrl(this.searchPath) + "?delinquent=true&minYears=" + minYears + "&maxYears=" + maxYears + "&offset=" + offset + "&limit=" + batchSize;
         logger.info(`Fetching batch: offset=${offset}, limit=${batchSize}`);
 
         const html = await this.fetch(url);
@@ -79,7 +89,7 @@ export class SBCountyTaxScraper extends BaseScraper {
     }
 
     logger.info(`Searching San Bernardino County for parcel ${validation.normalized}`);
-    const searchUrl = this.buildUrl(this.config.searchPath) + "?parcel=" + encodeURIComponent(validation.normalized);
+    const searchUrl = this.buildUrl(this.searchPath) + "?parcel=" + encodeURIComponent(validation.normalized);
 
     try {
       const html = await this.fetch(searchUrl);
@@ -102,7 +112,7 @@ export class SBCountyTaxScraper extends BaseScraper {
    */
   async searchByOwner(ownerName, options = {}) {
     logger.info(`Searching San Bernardino County for owner "${ownerName}"`);
-    const searchUrl = this.buildUrl(this.config.searchPath) + "?owner=" + encodeURIComponent(ownerName.trim());
+    const searchUrl = this.buildUrl(this.searchPath) + "?owner=" + encodeURIComponent(ownerName.trim());
 
     try {
       const html = await this.fetch(searchUrl);
@@ -177,20 +187,6 @@ export const sbCountyScraper = new SBCountyTaxScraper({
   name: "San Bernardino County Tax",
   baseUrl: "https://www.sbcountyatc.gov",
   searchPath: "/tax-services/property-tax",
-  delinquencyYears: 4,
   minDelinquencyYears: 1,
   maxDelinquencyYears: 5,
-  selectors: {
-    searchForm: "#parcel-search-form",
-    accountNumber: "#account-number",
-    searchButton: "#search-btn",
-    resultsTable: "#results-table tbody tr",
-    parcelId: ".parcel-id",
-    ownerName: ".owner-name",
-    address: ".property-address",
-    delinquencyAmount: ".delinquent-amount",
-    delinquencyYears: ".delinquency-years",
-    taxYear: ".tax-year",
-    status: ".compliance-status",
-  },
 });
