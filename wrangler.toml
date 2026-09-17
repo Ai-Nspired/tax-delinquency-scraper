@@ -1,0 +1,35 @@
+name = "tax-delinquency-scraper"
+compatibility_date = "2026-09-17"
+
+# Cloudflare Worker API configuration
+# This is the backend API that serves scraped data
+
+[vars]
+MIN_DELINQUENCY_YEARS = "4"
+LOG_LEVEL = "info"
+
+[env.production]
+name = "tax-delinquency-scraper"
+
+# KV namespace for caching scraped results
+# Create with: wrangler kv:namespace create RESULTS_KV
+[[kv_namespaces]]
+binding = "RESULTS_KV"
+id = "your-kv-namespace-id-here"
+
+# R2 bucket for storing raw HTML responses
+# Create with: wrangler r2 bucket create tax-scraper-raw
+[[r2_buckets]]
+binding = "RAW_R2"
+bucket_name = "tax-scraper-raw"
+
+# Cloudflare Pages config for the Worker API
+[pages]
+build_command = "npm ci && npm test"
+
+# Worker entry point
+[[workers]]
+script = "src/worker.js"
+
+# GitHub Pages frontend is served separately from the public/ folder
+# The .github/workflows/deploy.yml handles GitHub Pages deployment
