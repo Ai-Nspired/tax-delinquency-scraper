@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Delinquency Scanner — San Bernardino County</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+<body>
+  <header>
+    <h1>🏠 Tax Delinquency Scanner</h1>
+    <p class="subtitle">San Bernardino County — Pre-Foreclosure & Pre-Tax-Sale Research</p>
+  </header>
+
+  <main>
+    <section class="search-section" aria-label="Search properties">
+      <div class="search-bar">
+        <input type="text" id="parcel-search" placeholder="Search by Parcel ID (e.g. 1234-AB-5678)" aria-label="Parcel ID search">
+        <button id="search-btn" onclick="searchParcel()">Search</button>
+      </div>
+      <div class="search-hint">Or browse all properties 4+ years delinquent</div>
+    </section>
+
+    <section class="stats-section" aria-label="Summary statistics">
+      <div class="stat-card">
+        <span class="stat-number" id="stat-total">—</span>
+        <span class="stat-label">Total Properties</span>
+      </div>
+      <div class="stat-card highlight">
+        <span class="stat-number" id="stat-delinquent">—</span>
+        <span class="stat-label">Total Delinquent Amount</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number" id="stat-years">—</span>
+        <span class="stat-label">Avg Delinquency (Years)</span>
+      </div>
+    </section>
+
+    <section class="results-section" aria-label="Search results">
+      <div class="results-header">
+        <h2 id="results-title">Properties</h2>
+        <div class="results-controls">
+          <label for="sort-select">Sort by:</label>
+          <select id="sort-select" onchange="sortResults()">
+            <option value="years-desc">Delinquency Years (high→low)</option>
+            <option value="years-asc">Delinquency Years (low→high)</option>
+            <option value="amount-desc">Amount Due (high→low)</option>
+            <option value="amount-asc">Amount Due (low→high)</option>
+          </select>
+        </div>
+      </div>
+      <div id="loading" class="loading hidden">Loading properties...</div>
+      <div id="error" class="error hidden"></div>
+      <div id="results-list" class="results-list"></div>
+      <div id="no-results" class="no-results hidden">No properties found matching your search.</div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Data from San Bernardino County Tax Records · Scrape interval: periodic · <a href="https://github.com/Ai-Nspired/tax-delinquency-scraper">GitHub</a></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -11,10 +11,14 @@
     "scrape": "node src/index.js --scrape",
     "process": "node src/index.js --process",
     "export": "node src/index.js --export",
+    "build": "npm run worker:deploy",
+    "preview": "npx serve public",
     "deploy": "wrangler pages deploy . --project-name tax-delinquency-scraper",
     "deploy:preview": "wrangler pages deploy . --project-name tax-delinquency-scraper --branch preview",
     "worker:dev": "wrangler dev src/worker.js",
     "worker:deploy": "wrangler deploy src/worker.js",
+    "gh-pages": "gh-pages -d public",
+    "setup:pages": "echo 'Enable GitHub Pages in Settings > Pages > Deploy from main branch'",
     "lint": "echo No linter configured yet"
   },
   "keywords": [
