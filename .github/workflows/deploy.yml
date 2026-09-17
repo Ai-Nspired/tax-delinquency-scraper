@@ -33,6 +33,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -49,7 +52,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  # Also deploy Cloudflare Pages for the API
+  # Deploy Cloudflare Worker API separately
   deploy-api:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

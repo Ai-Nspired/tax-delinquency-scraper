@@ -6,8 +6,8 @@ Scrapes property tax delinquency records from San Bernardino County for pre-fore
 
 ## Live Demo
 
-- **Frontend (GitHub Pages)**: [tax-delinquency-scraper.github.io](https://dno-luigi.github.io/tax-delinquency-scraper)
-- **API (Cloudflare Pages)**: [tax-delinquency-scraper.pages.dev](https://tax-delinquency-scraper.pages.dev)
+- **Frontend (GitHub Pages)**: [https://dno-luigi.github.io/tax-delinquency-scraper](https://dno-luigi.github.io/tax-delinquency-scraper)
+- **API (Cloudflare Pages)**: [https://tax-delinquency-scraper.pages.dev](https://tax-delinquency-scraper.pages.dev)
 
 ## Project Structure
 
@@ -16,7 +16,8 @@ tax-delinquency-scraper/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml        # CI/CD: GitHub Pages + Cloudflare
-├── public/                    # GitHub Pages frontend
+├── public/                    # GitHub Pages frontend source
+│   ├── .nojekyll              # Prevent Jekyll processing
 │   ├── index.html             # Main SPA
 │   ├── styles.css             # Dark theme styles
 │   └── app.js                 # Frontend logic
@@ -45,7 +46,7 @@ tax-delinquency-scraper/
 ├── data/
 │   ├── raw/                    # Raw HTML/responses
 │   └── output/                 # Processed JSON records
-├── wrangler.toml               # Cloudflare Pages + Worker config
+├── wrangler.toml               # Cloudflare Worker config
 ├── _headers                    # Security headers for Pages
 ├── package.json
 └── README.md
@@ -61,19 +62,38 @@ npm run export      # Export processed results
 npm run dev         # Run with auto-reload (Node --watch)
 npm test            # Run test suite
 npm run preview     # Preview frontend locally (npx serve public)
-npm run deploy      # Deploy to Cloudflare Pages
+npm run deploy      # Deploy Worker to Cloudflare Pages
 npm run gh-pages    # Deploy frontend to GitHub Pages
 node src/index.js --search <parcelId>   # Search a specific parcel
 ```
 
-## GitHub Pages Setup
+## GitHub Pages Setup (Frontend)
+
+The frontend is a static SPA served from the `public/` folder.
+
+### Option 1: Automatic via GitHub Actions
+
+The `.github/workflows/deploy.yml` automatically deploys the `public/` folder to GitHub Pages on every push to `main`.
 
 1. Go to **Settings > Pages** on the GitHub repo
+2. Set **Source** to `GitHub Actions`
+3. The workflow will deploy `public/` automatically
+
+### Option 2: Manual (Deploy from branch)
+
+1. Go to **Settings > Pages**
 2. Set **Source** to `Deploy from a branch`
 3. Set **Branch** to `main` and **Folder** to `/public`
-4. Save — the frontend will be live at `https://<username>.github.io/tax-delinquency-scraper`
+4. Save
 
-## Cloudflare Setup
+### Frontend URL
+
+Once deployed, the frontend is live at:
+```
+https://dno-luigi.github.io/tax-delinquency-scraper
+```
+
+## Cloudflare Setup (API Backend)
 
 ### Prerequisites
 1. A [Cloudflare account](https://dash.cloudflare.com/)
@@ -93,19 +113,29 @@ wrangler login
 wrangler kv:namespace create RESULTS_KV
 wrangler r2 bucket create tax-scraper-raw
 
-# 4. Deploy to Cloudflare Pages
+# 4. Deploy Worker to Cloudflare Pages
 wrangler pages deploy . --project-name tax-delinquency-scraper
 
 # 5. Or connect GitHub for auto-deploy
 wrangler pages project create tax-delinquency-scraper --production-branch main
 ```
 
-### GitHub Secrets Required
+### GitHub Secrets Required (for Cloudflare auto-deploy)
 
 | Secret | Description |
 |---|---|
 | `CF_API_TOKEN` | Cloudflare API token with Pages edit scope |
 | `CF_ACCOUNT_ID` | Your Cloudflare account ID |
+
+## API Endpoints
+
+The Cloudflare Worker serves these endpoints:
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/delinquent?minYears=4` | List all properties 4+ years delinquent |
+| `GET /api/search?parcel=1234-AB-5678` | Search by parcel ID |
+| `GET /api/stats` | Summary statistics |
 
 ## Delinquency Filtering
 
