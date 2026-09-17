@@ -10,7 +10,12 @@
     "test": "node --test test/",
     "scrape": "node src/index.js --scrape",
     "process": "node src/index.js --process",
-    "export": "node src/index.js --export"
+    "export": "node src/index.js --export",
+    "deploy": "wrangler pages deploy . --project-name tax-delinquency-scraper",
+    "deploy:preview": "wrangler pages deploy . --project-name tax-delinquency-scraper --branch preview",
+    "worker:dev": "wrangler dev src/worker.js",
+    "worker:deploy": "wrangler deploy src/worker.js",
+    "lint": "echo No linter configured yet"
   },
   "keywords": [
     "tax",
