@@ -1,12 +1,12 @@
 /**
  * Tax lien / delinquency source configurations.
- * Each entry defines a site to scrape and how to extract records.
+ * San Bernardino County — pre-foreclosure and pre-tax-sale research.
  */
 export const SITES = [
   {
-    id: "san-bernardino-county-tax",
+    id: "sb-county-tax",
     name: "San Bernardino County Tax",
-    baseUrl: "https://www.sbcountytax.com",
+    baseUrl: "https://www.sbcountyatc.gov",
     searchPath: "/tax-services/property-tax",
     delinquencyYears: 4,
     selectors: {
