@@ -17,8 +17,7 @@
     "deploy:preview": "wrangler pages deploy . --project-name tax-delinquency-scraper --branch preview",
     "worker:dev": "wrangler dev src/worker.js",
     "worker:deploy": "wrangler deploy src/worker.js",
-    "gh-pages": "gh-pages -d public",
-    "setup:pages": "echo 'Enable GitHub Pages in Settings > Pages > Deploy from main branch'",
+    "deploy:frontend": "echo 'Use GitHub Actions or Settings > Pages > Deploy from branch: main, folder: /public'",
     "lint": "echo No linter configured yet"
   },
   "keywords": [
