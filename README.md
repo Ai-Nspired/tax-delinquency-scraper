@@ -6,7 +6,7 @@ Scrapes property tax delinquency records from San Bernardino County for pre-fore
 
 ## Live Demo
 
-- **Frontend (GitHub Pages)**: [https://dno-luigi.github.io/tax-delinquency-scraper](https://dno-luigi.github.io/tax-delinquency-scraper)
+- **Frontend (GitHub Pages)**: [https://Ai-Nspired.github.io/tax-delinquency-scraper](https://Ai-Nspired.github.io/tax-delinquency-scraper)
 - **API (Cloudflare Pages)**: [https://tax-delinquency-scraper.pages.dev](https://tax-delinquency-scraper.pages.dev)
 
 ## Quick Start
