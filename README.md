@@ -28,30 +28,30 @@ npm run process     # Process raw data and filter 4+ year delinquency
 npm run export      # Export processed results
 npm run dev         # Run with auto-reload (Node --watch)
 npm test            # Run test suite
-npm run preview     # Preview frontend locally (npx serve docs)
+npm run preview     # Preview frontend locally (npx serve .)
 npm run deploy      # Deploy Worker to Cloudflare Pages
 node src/index.js --search <parcelId>   # Search a specific parcel
 ```
 
 ## GitHub Pages (Frontend)
 
-The frontend is a static SPA in the `docs/` folder. GitHub Pages serves this folder automatically.
+The frontend is a static SPA on the `gh-pages` branch. GitHub Pages serves it automatically.
 
 ### Enable GitHub Pages
 
 1. Go to **Settings > Pages** on the GitHub repo
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**
-3. The `.github/workflows/deploy.yml` workflow will automatically deploy the `docs/` folder on every push to `main`
-4. Once deployed, the frontend is live at `https://<your-username>.github.io/tax-delinquency-scraper`
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
+3. Set **Branch** to **gh-pages** and **Folder** to **/ (root)**
+4. Save — the frontend will be live at `https://Ai-Nspired.github.io/tax-delinquency-scraper`
 
 ### What gets deployed
 
 | File | Purpose |
 |---|---|
-| `docs/index.html` | Main SPA with search bar, stats, and property list |
-| `docs/styles.css` | Dark theme, responsive styles |
-| `docs/app.js` | Frontend logic — fetches from `/api/*` endpoints |
-| `docs/.nojekyll` | Prevents Jekyll processing of assets |
+| `index.html` | Main SPA with search bar, stats, and property list |
+| `styles.css` | Dark theme, responsive styles |
+| `app.js` | Frontend logic — fetches from `/api/*` endpoints |
+| `.nojekyll` | Prevents Jekyll processing of assets |
 
 ## Cloudflare (API Backend)
 
